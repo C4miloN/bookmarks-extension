@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveEdit = document.getElementById('saveEdit');
     const cancelEdit = document.getElementById('cancelEdit');
     const modalTitle = document.getElementById('modalTitle');
+    const openInNewTabCheckbox = document.getElementById('openInNewTab');
     
     let currentTheme = 'light';
     let currentView = 'tree';
@@ -17,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let bookmarkData = null;
     let dragSource = null;
     let currentEditingBookmark = null;
+    let openInNewTab = true;
 
     // Theme Management
     function initTheme() {
@@ -36,6 +38,24 @@ document.addEventListener('DOMContentLoaded', function() {
     themeToggle.addEventListener('click', function() {
         currentTheme = currentTheme === 'light' ? 'dark' : 'light';
         applyTheme();
+    });
+
+    // Tab Opening Preference
+    function initTabPreference() {
+        const savedTabPreference = localStorage.getItem('bookmarksOpenInNewTab');
+        if (savedTabPreference !== null) {
+            openInNewTab = savedTabPreference === 'true';
+            openInNewTabCheckbox.checked = openInNewTab;
+        }
+    }
+
+    function saveTabPreference() {
+        localStorage.setItem('bookmarksOpenInNewTab', openInNewTab);
+    }
+
+    openInNewTabCheckbox.addEventListener('change', function() {
+        openInNewTab = this.checked;
+        saveTabPreference();
     });
 
     // View Management
@@ -301,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
             favicon.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBmaWxsPSIjRjE2QzM5Ii8+Cjx0ZXh0IHg9IjgiIHk9IjExIiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4hPC90ZXh0Pgo8L3N2Zz4K';
         }
         favicon.onerror = function() {
-            this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBmaWxsPSIjRjE2QzM5Ii8+Cjx0ZXh0IHg9IjgiIHk9IjExIiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiB0ZXh0LWFuY2hvcj0ibm9lkZGxlIj4hPC90ZXh0Pgo8L3N2Zz4K';
+            this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBmaWxsPSIjRjE2QzM5Ii8+Cjx0ZXh0IHg9IjgiIHk9IjExIiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4hPC90ZXh0Pgo8L3N2Zz4K';
         };
         
         if (viewType === 'grid') {
@@ -374,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!e.target.classList.contains('bookmark-url') && 
                 !e.target.classList.contains('bookmark-tooltip') &&
                 !e.target.classList.contains('action-btn')) {
-                chrome.tabs.create({url: bookmark.url});
+                openBookmark(bookmark.url);
             }
         });
 
@@ -399,6 +419,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         return div;
+    }
+
+    // Open Bookmark Function
+    function openBookmark(url) {
+        if (openInNewTab) {
+            chrome.tabs.create({ url: url });
+        } else {
+            chrome.tabs.update({ url: url });
+        }
     }
 
     // Drag & Drop Implementation
@@ -552,6 +581,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize
     initTheme();
+    initTabPreference();
     initView();
     loadCollapsedState();
     loadBookmarks();
